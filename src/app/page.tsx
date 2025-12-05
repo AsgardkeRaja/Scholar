@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Beaker, BookCopy, Zap, FileText } from 'lucide-react';
+import { ArrowRight, Search, Upload, Sparkles, Brain, Zap, FileText, Coffee, Beaker, BookCopy } from 'lucide-react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import SpotlightCard from '@/components/SpotlightCard';
 import { useRef } from 'react';
@@ -39,24 +39,111 @@ export default function HomePage() {
             scale: heroScale,
             y: heroY
           }}
-          className="text-center py-20 md:py-32 relative"
+          className="text-center py-20 md:py-32 relative overflow-hidden"
         >
-          <div className="container">
-            <h1 className="text-5xl md:text-7xl font-bold font-headline tracking-tighter mb-4">
-              Accelerate Your Research
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-              Scholar Summarizer is an AI-powered assistant that helps you discover, analyze, and synthesize scholarly articles from the world's leading academic databases.
-            </p>
-            <Button asChild size="lg">
-              <Link href="/search">
-                Start Searching <ArrowRight className="ml-2" />
-              </Link>
-            </Button>
+          <div className="container relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold mb-6"
+            >
+              ✨ Your research sidekick is here
+            </motion.div>
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="text-5xl md:text-7xl font-bold font-headline tracking-tighter mb-6"
+            >
+              Stop drowning in papers.
+              <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-400 to-pink-400">
+                Start discovering insights.
+              </span>
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8"
+            >
+              Scholar Summarizer is like having a PhD student who actually reads everything, never complains, and works 24/7.
+              Search millions of papers, get AI summaries, and generate literature reviews faster than you can say "peer review."
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+            >
+              <Button asChild size="lg" className="text-base px-8">
+                <Link href="/search">
+                  Start Searching <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="text-base px-8">
+                <Link href="/upload">
+                  Upload Papers <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            </motion.div>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="text-sm text-muted-foreground mt-6"
+            >
+              No sign-up required. No credit card. Just pure research power. 
+            </motion.p>
           </div>
         </motion.section>
 
-        {/* Features Section */}
+        {/* The Problem Section */}
+        <section className="py-20 bg-gradient-to-b">
+          <div className="container">
+            <div className="max-w-4xl mx-auto">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                viewport={{ once: true }}
+                className="text-center mb-16"
+              >
+                <h2 className="text-4xl md:text-5xl font-headline font-bold mb-6">
+                  We know the struggle
+                </h2>
+                <p className="text-xl text-muted-foreground">
+                  You've got 47 tabs open, your coffee's gone cold, and you're still on page 2 of that abstract...
+                </p>
+              </motion.div>
+
+              <div className="grid md:grid-cols-3 gap-6">
+                {[
+                  { icon: <Coffee className="w-8 h-8" />, title: "Hours wasted", desc: "Searching across multiple databases" },
+                  { icon: <Brain className="w-8 h-8" />, title: "Information overload", desc: "Too many papers, not enough time" },
+                  { icon: <FileText className="w-8 h-8" />, title: "Boring summaries", desc: "Reading the same intro 50 times" }
+                ].map((item, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: i * 0.1 }}
+                    viewport={{ once: true }}
+                    className="text-center p-6 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10"
+                  >
+                    <div className="flex items-center justify-center w-12 h-12 bg-primary/10 text-primary rounded-lg mx-auto mb-4">
+                      {item.icon}
+                    </div>
+                    <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground">{item.desc}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="py-20 ">
           <div className="container">
             <div className="text-center max-w-2xl mx-auto mb-12">
