@@ -17,6 +17,9 @@ const ALL_COLUMNS = [
     'Contribution',
     'Future Work',
     'Key Findings',
+    'Dataset Used',
+    'Output',
+    'Accuracy',
 ];
 
 export default function UploadPage() {

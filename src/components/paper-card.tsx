@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { type Paper } from '@/types';
-import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useToast } from '@/hooks/use-toast';
 import { summarizeAbstractAction } from '@/app/actions';
 import { generateBibtex } from '@/lib/citations';
+import { useAuth } from '@/contexts/auth-context';
+import { addBookmark, removeBookmark, isBookmarked as checkIsBookmarked } from '@/lib/firestore-service';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,21 +26,61 @@ interface PaperCardProps {
 }
 
 export function PaperCard({ paper, isSelected, onSelectionChange }: PaperCardProps) {
-  const [bookmarks, setBookmarks] = useLocalStorage<Paper[]>('bookmarks', []);
+  const { user } = useAuth();
+  const router = useRouter();
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [checkingBookmark, setCheckingBookmark] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
   const [isSummarizing, startSummaryTransition] = useTransition();
   const [isCopied, setIsCopied] = useState(false);
   const { toast } = useToast();
 
-  const isBookmarked = bookmarks.some(b => b.paperId === paper.paperId);
+  // Check if paper is bookmarked on mount and when user changes
+  useEffect(() => {
+    async function checkBookmark() {
+      if (user) {
+        setCheckingBookmark(true);
+        const bookmarked = await checkIsBookmarked(user.uid, paper.paperId);
+        setIsBookmarked(bookmarked);
+        setCheckingBookmark(false);
+      } else {
+        setIsBookmarked(false);
+      }
+    }
+    checkBookmark();
+  }, [user, paper.paperId]);
 
-  const handleBookmarkToggle = () => {
-    if (isBookmarked) {
-      setBookmarks(bookmarks.filter(b => b.paperId !== paper.paperId));
-      toast({ title: "Bookmark removed", description: `"${paper.title}" removed from your bookmarks.` });
-    } else {
-      setBookmarks([...bookmarks, paper]);
-      toast({ title: "Bookmarked!", description: `"${paper.title}" added to your bookmarks.` });
+  const handleBookmarkToggle = async () => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to bookmark papers.",
+        action: (
+          <Button variant="outline" size="sm" onClick={() => router.push('/login')}>
+            Sign In
+          </Button>
+        ),
+      });
+      return;
+    }
+
+    try {
+      if (isBookmarked) {
+        await removeBookmark(user.uid, paper.paperId);
+        setIsBookmarked(false);
+        toast({ title: "Bookmark removed", description: `"${paper.title}" removed from your bookmarks.` });
+      } else {
+        await addBookmark(user.uid, paper);
+        setIsBookmarked(true);
+        toast({ title: "Bookmarked!", description: `"${paper.title}" added to your bookmarks.` });
+      }
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update bookmark. Please try again.",
+      });
     }
   };
 
@@ -107,8 +149,13 @@ export function PaperCard({ paper, isSelected, onSelectionChange }: PaperCardPro
                 onClick={handleBookmarkToggle}
                 aria-label={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
                 className="text-muted-foreground hover:text-amber-500 shrink-0"
+                disabled={checkingBookmark}
               >
-                <Star className={cn('h-5 w-5', isBookmarked && 'fill-amber-400 text-amber-500')} />
+                {checkingBookmark ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Star className={cn('h-5 w-5', isBookmarked && 'fill-amber-400 text-amber-500')} />
+                )}
               </Button>
             </div>
             <CardDescription className="text-sm mt-2 space-y-1">

@@ -25,6 +25,9 @@ const AVAILABLE_COLUMNS: ColumnOption[] = [
     { id: 'Contribution', label: 'Contribution' },
     { id: 'Future Work', label: 'Future Work' },
     { id: 'Key Findings', label: 'Key Findings' },
+    { id: 'Dataset Used', label: 'Dataset Used' },
+    { id: 'Output', label: 'Output' },
+    { id: 'Accuracy', label: 'Accuracy' },
 ];
 
 export default function ReviewPage() {
