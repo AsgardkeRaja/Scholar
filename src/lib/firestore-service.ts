@@ -16,6 +16,11 @@ import { type Paper } from '@/types';
  * Get all bookmarks for a user
  */
 export async function getUserBookmarks(userId: string): Promise<Paper[]> {
+    if (!db) {
+        console.warn('Firestore not initialized');
+        return [];
+    }
+
     try {
         const bookmarksRef = collection(db, 'users', userId, 'bookmarks');
         const q = query(bookmarksRef, orderBy('bookmarkedAt', 'desc'));
@@ -52,6 +57,11 @@ function sanitizeId(id: string): string {
  * Add a bookmark for a user
  */
 export async function addBookmark(userId: string, paper: Paper): Promise<void> {
+    if (!db) {
+        console.warn('Firestore not initialized');
+        return;
+    }
+
     try {
         const bookmarkRef = doc(db, 'users', userId, 'bookmarks', sanitizeId(paper.paperId));
         await setDoc(bookmarkRef, {
@@ -68,6 +78,11 @@ export async function addBookmark(userId: string, paper: Paper): Promise<void> {
  * Remove a bookmark for a user
  */
 export async function removeBookmark(userId: string, paperId: string): Promise<void> {
+    if (!db) {
+        console.warn('Firestore not initialized');
+        return;
+    }
+
     try {
         const bookmarkRef = doc(db, 'users', userId, 'bookmarks', sanitizeId(paperId));
         await deleteDoc(bookmarkRef);
@@ -81,6 +96,11 @@ export async function removeBookmark(userId: string, paperId: string): Promise<v
  * Check if a paper is bookmarked by a user
  */
 export async function isBookmarked(userId: string, paperId: string): Promise<boolean> {
+    if (!db) {
+        console.warn('Firestore not initialized');
+        return false;
+    }
+
     try {
         const bookmarkRef = doc(db, 'users', userId, 'bookmarks', sanitizeId(paperId));
         const snapshot = await getDoc(bookmarkRef);
