@@ -16,7 +16,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Star, Copy, Check, BookOpen, Quote, Book, Loader2, Sparkles, ExternalLink } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Star, Copy, Check, BookOpen, Quote, Book, Loader2, Sparkles, ExternalLink, Bot } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 
 interface PaperCardProps {
@@ -33,6 +34,8 @@ export function PaperCard({ paper, isSelected, onSelectionChange }: PaperCardPro
   const [summary, setSummary] = useState<string | null>(null);
   const [isSummarizing, startSummaryTransition] = useTransition();
   const [isCopied, setIsCopied] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<'gemini' | 'groq'>('gemini');
+  const [usedModel, setUsedModel] = useState<'gemini' | 'groq' | null>(null);
   const { toast } = useToast();
 
   // Check if paper is bookmarked on mount and when user changes
@@ -85,16 +88,18 @@ export function PaperCard({ paper, isSelected, onSelectionChange }: PaperCardPro
   };
 
   const handleSummarize = () => {
-    if (!paper.abstract) {
+    if (!paper.abstract && !paper.fullText) {
       toast({ variant: "destructive", title: "No Abstract", description: "This paper does not have an abstract to summarize." });
       return;
     }
+    const textToSummarize = paper.fullText || paper.abstract!;
     startSummaryTransition(async () => {
-      const result = await summarizeAbstractAction(paper.abstract!);
+      const result = await summarizeAbstractAction(textToSummarize, selectedModel);
       if (result.error) {
         toast({ variant: "destructive", title: "Summarization Failed", description: result.error });
       } else {
         setSummary(result.summary || 'Could not generate summary.');
+        setUsedModel(selectedModel);
       }
     });
   };
@@ -165,9 +170,15 @@ export function PaperCard({ paper, isSelected, onSelectionChange }: PaperCardPro
               <p>
                 <span className="font-semibold text-foreground/80">Published:</span> {paper.year || 'N/A'} in{' '}
                 <span className="italic">{paper.journal?.name || 'N/A'}</span>
+                {paper.source && (
+                  <span className="ml-2 text-xs text-muted-foreground">· via <span className="font-medium text-primary/80">{paper.source}</span></span>
+                )}
               </p>
             </CardDescription>
-            {paper.isOpenAccess && <Badge variant="secondary" className="w-fit mt-3"><Check className="w-3 h-3 mr-1.5" />Open Access</Badge>}
+            <div className="flex items-center gap-2 mt-3 flex-wrap">
+              {paper.isOpenAccess && <Badge variant="secondary" className="w-fit"><Check className="w-3 h-3 mr-1.5" />Open Access</Badge>}
+              {paper.fullText && <Badge variant="outline" className="w-fit text-emerald-400 border-emerald-400/50">Full Text Available</Badge>}
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -183,18 +194,37 @@ export function PaperCard({ paper, isSelected, onSelectionChange }: PaperCardPro
             <AccordionContent className="space-y-4 text-muted-foreground text-base pt-4">
               <p>{paper.abstract || 'No abstract available.'}</p>
               {paper.abstract && (
-                <Button variant="outline" size="sm" onClick={handleSummarize} disabled={isSummarizing}>
-                  {isSummarizing ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Summarizing...</>
-                  ) : (
-                    <><Sparkles className="mr-2 h-4 w-4" /> Generate AI Summary</>
-                  )}
-                </Button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={selectedModel} onValueChange={(v) => setSelectedModel(v as 'gemini' | 'groq')}>
+                    <SelectTrigger className="w-[200px] h-9">
+                      <Bot className="w-4 h-4 mr-2 shrink-0" />
+                      <SelectValue placeholder="Select Model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gemini">Gemini 2.5 Flash</SelectItem>
+                      <SelectItem value="groq">Llama 3.3 70B (Groq)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={handleSummarize} disabled={isSummarizing}>
+                    {isSummarizing ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Summarizing...</>
+                    ) : (
+                      <><Sparkles className="mr-2 h-4 w-4" /> Generate AI Summary</>
+                    )}
+                  </Button>
+                </div>
               )}
               {isSummarizing && <Skeleton className="w-full h-24 mt-2" />}
               {summary && !isSummarizing && (
                 <div className="p-4 bg-secondary rounded-lg border space-y-2">
-                  <h4 className="font-semibold flex items-center gap-2 text-sm text-foreground"><Quote className="w-4 h-4 text-primary" /> AI Summary</h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold flex items-center gap-2 text-sm text-foreground"><Quote className="w-4 h-4 text-primary" /> AI Summary</h4>
+                    {usedModel && (
+                      <Badge variant="outline" className="text-xs">
+                        {usedModel === 'gemini' ? 'Gemini 2.5 Flash' : 'Llama 3.3 70B (Groq)'}
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-secondary-foreground">{summary}</p>
                 </div>
               )}

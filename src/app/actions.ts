@@ -4,7 +4,7 @@ import { generateEmbeddings } from '@/ai/flows/generate-embeddings';
 import { suggestSimilarPapers, type SuggestSimilarPapersInput } from '@/ai/flows/suggest-similar-papers';
 import { summarizeAbstract } from '@/ai/flows/summarize-abstract';
 import { generateLiteratureReview, type GenerateLiteratureReviewInput } from '@/ai/flows/generate-literature-review';
-import { extractPaperAttributesFlow, type ExtractAttributesInput } from '@/ai/flows/extract-paper-attributes';
+import { extractPaperAttributes, type ExtractAttributesInput } from '@/ai/flows/extract-paper-attributes';
 import { type Paper } from '@/types';
 
 const PAGE_SIZE = 10;
@@ -31,7 +31,7 @@ async function searchArxiv(query: string, year?: number, offset = 0): Promise<Pa
         }
         const xmlData = await response.text();
         const entries = xmlData.split('<entry>').slice(1);
-        return entries.map((entryXml): Paper => {
+        const papers = entries.map((entryXml): Paper => {
             const fullEntryXml = '<entry>' + entryXml;
             const id = parseXml(fullEntryXml, 'id')[0] || '';
             const url = parseXml(fullEntryXml, 'id')[0] || null;
@@ -48,12 +48,47 @@ async function searchArxiv(query: string, year?: number, offset = 0): Promise<Pa
                 url: url,
                 title: title.replace(/\s+/g, ' ').trim(),
                 abstract: abstract.replace(/\s+/g, ' ').trim(),
+                source: 'ArXiv',
                 authors,
                 year: publishedYear,
                 journal: null,
-                isOpenAccess: true, // arXiv papers are open access
+                isOpenAccess: true,
             };
         });
+
+        // Try to fetch full text for ArXiv papers via ar5iv HTML
+        await Promise.all(papers.map(async (paper) => {
+            try {
+                const arxivId = paper.paperId.split('/abs/').pop()?.replace(/v\d+$/, '');
+                if (!arxivId) return;
+                const htmlUrl = `https://ar5iv.labs.arxiv.org/html/${arxivId}`;
+                const res = await fetch(htmlUrl, { signal: AbortSignal.timeout(5000) });
+                if (res.ok) {
+                    const html = await res.text();
+                    // Extract text content from the HTML body, stripping tags
+                    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+                    if (bodyMatch) {
+                        const textContent = bodyMatch[1]
+                            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+                            .replace(/<[^>]+>/g, ' ')
+                            .replace(/&nbsp;/g, ' ')
+                            .replace(/&amp;/g, '&')
+                            .replace(/&lt;/g, '<')
+                            .replace(/&gt;/g, '>')
+                            .replace(/\s+/g, ' ')
+                            .trim();
+                        if (textContent.length > 500) {
+                            paper.fullText = textContent.substring(0, 15000);
+                        }
+                    }
+                }
+            } catch {
+                // Silently fail — abstract is still available
+            }
+        }));
+
+        return papers;
     } catch (e) {
         console.error('Failed to fetch from ArXiv:', e);
         return [];
@@ -92,6 +127,7 @@ async function searchSemanticScholar(query: string, year?: number, offset = 0): 
             url: paper.url,
             title: paper.title,
             abstract: paper.abstract,
+            source: 'Semantic Scholar',
             authors: paper.authors,
             year: paper.year,
             journal: paper.journal,
@@ -130,7 +166,8 @@ async function searchCrossRef(query: string, year?: number, offset = 0): Promise
                 paperId: item.DOI,
                 url: item.URL,
                 title: item.title?.[0] || 'No title',
-                abstract: item.abstract?.replace(/<[^>]+>/g, '') || null, // Strip XML/HTML tags
+                abstract: item.abstract?.replace(/<[^>]+>/g, '') || null,
+                source: 'CrossRef' as const,
                 authors,
                 year: yearPublished,
                 journal: {
@@ -178,6 +215,8 @@ async function searchCore(query: string, year?: number, offset = 0): Promise<Pap
             url: item.downloadUrl,
             title: item.title,
             abstract: item.abstract,
+            fullText: item.fullText ? item.fullText.substring(0, 15000) : null,
+            source: 'CORE',
             authors: item.authors.map((name: string) => ({ name, authorId: null })),
             year: item.yearPublished,
             journal: item.journals?.[0] ? { name: item.journals[0].title, volume: null, pages: null } : null,
@@ -235,12 +274,12 @@ export async function searchPapersAction({ query, year, offset = 0 }: SearchPape
  * @param abstract The abstract text to summarize.
  * @returns An object containing the summary or an error message.
  */
-export async function summarizeAbstractAction(abstract: string): Promise<{ summary?: string; error?: string }> {
+export async function summarizeAbstractAction(abstract: string, model: 'gemini' | 'groq' = 'gemini'): Promise<{ summary?: string; error?: string }> {
     if (!abstract) {
         return { error: 'Abstract is empty.' };
     }
     try {
-        const result = await summarizeAbstract({ abstract });
+        const result = await summarizeAbstract({ abstract, model });
         return { summary: result.summary };
     } catch (e) {
         const error = e as Error;
@@ -298,7 +337,7 @@ export async function generateLiteratureReviewAction(input: GenerateLiteratureRe
  */
 export async function extractPaperAttributesAction(input: ExtractAttributesInput): Promise<{ data?: any[]; error?: string }> {
     try {
-        const result = await extractPaperAttributesFlow(input);
+        const result = await extractPaperAttributes(input);
         return { data: result.results };
     } catch (e) {
         const error = e as Error;

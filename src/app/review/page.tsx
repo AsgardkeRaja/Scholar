@@ -13,8 +13,9 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ArrowLeft, Download, Loader2, Sparkles, FileText, FileSpreadsheet, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Download, Loader2, Sparkles, FileText, FileSpreadsheet, ChevronDown, Bot } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const AVAILABLE_COLUMNS: ColumnOption[] = [
     { id: 'Abstract Summary', label: 'Abstract Summary' },
@@ -39,6 +40,7 @@ export default function ReviewPage() {
     const [selectedColumns, setSelectedColumns] = useState<string[]>(['Abstract Summary', 'Results']);
     const [extractedData, setExtractedData] = useState<Record<number, Record<string, string>>>({});
     const [isPending, startTransition] = useTransition();
+    const [selectedModel, setSelectedModel] = useState<'gemini' | 'groq'>('gemini');
 
     useEffect(() => {
         // Retrieve papers from localStorage to avoid re-fetching or passing huge query params
@@ -89,8 +91,9 @@ export default function ReviewPage() {
 
         startTransition(async () => {
             const input = {
-                papers: papers.map(p => ({ title: p.title, abstract: p.abstract || '' })),
+                papers: papers.map(p => ({ title: p.title, abstract: p.fullText || p.abstract || '' })),
                 attributes: attributesToFetch,
+                model: selectedModel,
             };
 
             const result = await extractPaperAttributesAction(input);
@@ -113,7 +116,7 @@ export default function ReviewPage() {
                 });
             }
         });
-    }, [selectedColumns, papers]);
+    }, [selectedColumns, papers, selectedModel]);
 
     const handleExportCSV = () => {
         // Simple CSV export
@@ -240,6 +243,19 @@ p.no-indent { text-indent: 0; }
                         selectedColumns={selectedColumns}
                         onSelectionChange={setSelectedColumns}
                     />
+                    <Select value={selectedModel} onValueChange={(v) => {
+                        setSelectedModel(v as 'gemini' | 'groq');
+                        setExtractedData({}); // Clear data to re-fetch with new model
+                    }}>
+                        <SelectTrigger className="w-[220px]">
+                            <Bot className="w-4 h-4 mr-2 shrink-0" />
+                            <SelectValue placeholder="Select Model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="gemini">Gemini 2.5 Flash</SelectItem>
+                            <SelectItem value="groq">Llama 3.3 70B (Groq)</SelectItem>
+                        </SelectContent>
+                    </Select>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline">

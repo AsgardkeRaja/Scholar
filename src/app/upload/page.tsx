@@ -72,11 +72,17 @@ export default function UploadPage() {
                     files.map(async (file, index) => {
                         const text = await extractTextFromPDF(file);
 
+                        // Try to extract the paper title from the first meaningful line
+                        const lines = text.split('\n').filter(l => l.trim() && !l.startsWith('--- Page'));
+                        const extractedTitle = lines[0]?.trim() || file.name.replace('.pdf', '');
+
                         // Create a paper object from the extracted text
                         return {
                             paperId: `uploaded-${Date.now()}-${index}`,
-                            title: file.name.replace('.pdf', ''),
-                            abstract: text.substring(0, 1000), // Use first 1000 chars as abstract
+                            title: extractedTitle.length > 10 ? extractedTitle : file.name.replace('.pdf', ''),
+                            abstract: text.substring(0, 15000), // Use first 15000 chars to capture tables, results, figures data
+                            fullText: text.substring(0, 15000),
+                            source: 'Upload' as const,
                             authors: [],
                             year: new Date().getFullYear(),
                             url: '',
@@ -229,87 +235,79 @@ export default function UploadPage() {
     );
 }
 
-// Helper function to extract text from PDF
+// Real PDF text extraction using pdfjs-dist
 async function extractTextFromPDF(file: File): Promise<string> {
-    // This is a placeholder - in a real implementation, you would use a library like pdf.js
-    // or send the file to a backend API that extracts the text
+    try {
+        // Dynamically import pdfjs-dist for client-side usage
+        const pdfjsLib = await import('pdfjs-dist');
 
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
+        // Set worker source to the file copied to public/
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
-        reader.onload = async (e) => {
-            try {
-                // Generate unique content based on the file to simulate different papers
-                // In production, you'd use pdf.js or similar to extract actual text
-                const fileHash = file.name + file.size + file.lastModified;
-                const uniqueId = Math.abs(hashCode(fileHash));
+        // Read file as ArrayBuffer
+        const arrayBuffer = await file.arrayBuffer();
 
-                // Generate varied content based on the unique ID
-                const topics = [
-                    'machine learning algorithms',
-                    'quantum computing applications',
-                    'climate change mitigation',
-                    'neural network architectures',
-                    'renewable energy systems',
-                    'biomedical engineering',
-                    'artificial intelligence ethics',
-                    'data privacy and security'
-                ];
+        // Load the PDF document with compatibility options
+        const pdf = await pdfjsLib.getDocument({
+            data: arrayBuffer,
+            useWorkerFetch: false,
+            isEvalSupported: false,
+            useSystemFonts: true,
+        }).promise;
 
-                const methods = [
-                    'experimental validation with control groups',
-                    'computational simulations and modeling',
-                    'statistical analysis of large datasets',
-                    'qualitative research methodologies',
-                    'longitudinal study design',
-                    'meta-analysis of existing literature'
-                ];
+        const totalPages = pdf.numPages;
+        const textParts: string[] = [];
 
-                const results = [
-                    'significant improvements in accuracy and efficiency',
-                    'novel insights into underlying mechanisms',
-                    'promising applications in real-world scenarios',
-                    'unexpected correlations between variables',
-                    'validation of theoretical predictions',
-                    'identification of key limiting factors'
-                ];
+        // Extract text from every page
+        for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+            const page = await pdf.getPage(pageNum);
+            const textContent = await page.getTextContent();
 
-                const topic = topics[uniqueId % topics.length];
-                const method = methods[uniqueId % methods.length];
-                const result = results[uniqueId % results.length];
+            // Reconstruct text with proper spacing
+            // This captures text from tables, paragraphs, headers, etc.
+            let lastY: number | null = null;
+            const pageLines: string[] = [];
+            let currentLine = '';
 
-                const text = `This is a research paper titled: ${file.name}. 
-        
-Abstract: This paper investigates ${topic} and presents novel findings. The methodology employed demonstrates ${result}. Our comprehensive analysis reveals important patterns and trends that advance the current understanding in this domain.
+            for (const item of textContent.items) {
+                if ('str' in item) {
+                    const textItem = item as any;
+                    const y = textItem.transform?.[5] ?? 0; // Y coordinate
 
-Introduction: Recent developments in ${topic} have opened new avenues for research. This study addresses critical gaps in the existing literature by introducing innovative approaches and methodologies. The significance of this work lies in its potential to transform current practices and inform future investigations.
-
-Methods: We employed ${method}. The research design incorporated rigorous quality controls, appropriate sample sizes, and validated measurement instruments to ensure reliability and validity of findings.
-
-Results: Our investigation yielded ${result}. Statistical analyses confirmed the robustness of these findings across multiple conditions and contexts. The data demonstrates clear patterns that support our hypotheses and extend beyond previous work in meaningful ways.
-
-Discussion: These findings have important implications for both theory and practice in ${topic}. The results challenge some conventional assumptions while supporting and extending other established principles. Several limitations should be noted, including scope constraints and generalizability considerations.
-
-Conclusion: This work makes significant contributions to the field of ${topic} by providing new evidence and frameworks for understanding complex phenomena. Future research should build upon these findings to explore additional dimensions and applications.`;
-
-                resolve(text);
-            } catch (error) {
-                reject(error);
+                    // If Y position changed significantly, it's a new line
+                    if (lastY !== null && Math.abs(y - lastY) > 2) {
+                        if (currentLine.trim()) {
+                            pageLines.push(currentLine.trim());
+                        }
+                        currentLine = textItem.str;
+                    } else {
+                        // Same line — add space between items if needed
+                        if (currentLine && textItem.str && !currentLine.endsWith(' ') && !textItem.str.startsWith(' ')) {
+                            currentLine += ' ';
+                        }
+                        currentLine += textItem.str;
+                    }
+                    lastY = y;
+                }
             }
-        };
+            // Push the last line
+            if (currentLine.trim()) {
+                pageLines.push(currentLine.trim());
+            }
 
-        reader.onerror = () => reject(new Error('Failed to read file'));
-        reader.readAsArrayBuffer(file);
-    });
-}
+            textParts.push(`--- Page ${pageNum} ---\n${pageLines.join('\n')}`);
+        }
 
-// Simple hash function to generate unique IDs from strings
-function hashCode(str: string): number {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
+        const fullText = textParts.join('\n\n');
+
+        if (!fullText.trim()) {
+            throw new Error('No text content found in PDF. The PDF may contain only scanned images.');
+        }
+
+        return fullText;
+    } catch (error) {
+        console.error('PDF extraction error:', error);
+        throw error;
     }
-    return hash;
 }
+
