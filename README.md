@@ -1,6 +1,6 @@
-# Scholar Summarizer: AI-Powered Research Assistant
+# The research: AI-Powered Research Assistant
 
-Scholar Summarizer is a web application designed to accelerate academic research by providing a unified interface to search, discover, and analyze scholarly articles from multiple academic databases. Leveraging the power of generative AI, it offers tools to summarize papers, find similar articles, and generate comprehensive literature reviews.
+The research is a web application designed to accelerate academic research by providing a unified interface to search, discover, and analyze scholarly articles from multiple academic databases. Leveraging the power of generative AI, it offers tools to summarize papers, find similar articles, and generate comprehensive literature reviews.
 
 ## ✨ Features
 
@@ -93,7 +93,7 @@ To get a local copy up and running, follow these simple steps.
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/scholar-summarizer.git
+    git clone https://github.com/your-username/the-research.git
     ```
 2.  **Install NPM packages:**
     ```bash

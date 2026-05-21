@@ -1,6 +1,6 @@
-# Scholar Summarizer: Development Methodology
+# The research: Development Methodology
 
-This document outlines the methodology and architectural approach used to develop the Scholar Summarizer application. The project integrates modern web technologies with powerful generative AI to create a comprehensive research assistant.
+This document outlines the methodology and architectural approach used to develop The research application. The project integrates modern web technologies with powerful generative AI to create a comprehensive research assistant.
 
 ## 1. System Architecture Overview
 

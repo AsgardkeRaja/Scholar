@@ -1,4 +1,4 @@
-# **App Name**: Scholar Summarizer
+# **App Name**: The research
 
 ## Core Features:
 

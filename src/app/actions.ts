@@ -146,7 +146,7 @@ async function searchCrossRef(query: string, year?: number, offset = 0): Promise
     }
 
     // CrossRef API requests a User-Agent header with a mailto link for politeness.
-    const headers = { 'User-Agent': 'ScholarSummarizer/1.0 (mailto:scholar.summarizer@example.com)' };
+    const headers = { 'User-Agent': 'TheResearch/1.0 (mailto:research@example.com)' };
 
     try {
         const response = await fetch(url, { headers, cache: 'no-store' });

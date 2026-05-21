@@ -7,100 +7,96 @@ html {
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body, 'Hanken Grotesk', sans-serif);
 }
 
 @layer base {
   :root {
-    /* Modern dark theme with indigo/violet accents */
-    --background: 222 47% 11%;
-    /* Deep navy background */
-    --foreground: 210 40% 98%;
-    /* Crisp white text */
+    /* Premium dark glassmorphic palette — "The Research" design system */
+    --background: 220 15% 8%;          /* #111317 */
+    --foreground: 240 13% 90%;         /* #e2e2e8 */
 
-    --card: 222 47% 14%;
-    /* Slightly lighter than background */
-    --card-foreground: 210 40% 98%;
+    --card: 220 9% 13%;               /* #1e2024 */
+    --card-foreground: 240 13% 90%;    /* #e2e2e8 */
 
-    --popover: 222 47% 14%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 220 9% 13%;            /* #1e2024 */
+    --popover-foreground: 240 13% 90%; /* #e2e2e8 */
 
-    --primary: 263 70% 60%;
-    /* Vibrant indigo/violet - more sophisticated than blue */
-    --primary-foreground: 0 0% 100%;
+    --primary: 258 100% 87%;          /* #d0bcff */
+    --primary-foreground: 263 100% 18%; /* #23005c deep violet */
 
-    --secondary: 217 33% 17%;
-    /* Muted blue-gray */
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 243 100% 88%;        /* #c3c0ff */
+    --secondary-foreground: 249 100% 21%; /* #100069 */
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    /* Softer muted text */
+    --muted: 220 5% 22%;              /* #333539 surface-variant */
+    --muted-foreground: 264 20% 80%;  /* #cbc3d7 on-surface-variant */
 
-    --accent: 280 65% 60%;
-    /* Purple accent for highlights */
-    --accent-foreground: 0 0% 100%;
+    --accent: 155 69% 59%;            /* #4edea3 tertiary */
+    --accent-foreground: 154 100% 6%; /* #002113 on-tertiary-fixed */
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 72% 51%;         /* #ff4444-ish error red */
+    --destructive-foreground: 0 86% 97%; /* #ffdad6 on-error-container */
 
-    --border: 217 33% 24%;
-    /* Subtle borders */
-    --input: 217 33% 17%;
-    --ring: 263 70% 60%;
-    /* Matches primary */
+    --border: 259 10% 30%;            /* #494454 outline-variant */
+    --input: 259 10% 30%;             /* #494454 */
+    --ring: 258 100% 87%;             /* matches primary */
 
-    --chart-1: 263 70% 60%;
-    /* Indigo */
-    --chart-2: 173 58% 50%;
-    /* Teal */
-    --chart-3: 43 74% 66%;
-    /* Gold */
-    --chart-4: 340 75% 60%;
-    /* Rose */
-    --chart-5: 160 60% 50%;
-    /* Emerald */
+    /* Chart palette – vivid contrasts for data viz */
+    --chart-1: 258 100% 87%;          /* violet / primary */
+    --chart-2: 155 69% 59%;           /* emerald / tertiary */
+    --chart-3: 43 74% 66%;            /* gold */
+    --chart-4: 340 75% 60%;           /* rose */
+    --chart-5: 243 100% 88%;          /* lavender / secondary */
+
+    /* Sidebar */
+    --sidebar-background: 216 14% 7%; /* #0c0e12 surface-container-lowest */
+    --sidebar-foreground: 240 13% 90%;
+    --sidebar-primary: 258 100% 87%;
+    --sidebar-primary-foreground: 263 100% 18%;
+    --sidebar-accent: 155 69% 59%;
+    --sidebar-accent-foreground: 154 100% 6%;
+    --sidebar-border: 259 10% 30%;
+    --sidebar-ring: 258 100% 87%;
 
     --radius: 0.75rem;
   }
 
+  /* Dark class — same values since we're dark-first,
+     but defined for compatibility with shadcn/ui dark variants */
   .dark {
-    /* Enhanced dark mode with deeper blacks */
-    --background: 222 47% 8%;
-    /* Even deeper navy */
-    --foreground: 210 40% 98%;
+    --background: 220 15% 8%;
+    --foreground: 240 13% 90%;
 
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
+    --card: 220 9% 13%;
+    --card-foreground: 240 13% 90%;
 
-    --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 220 9% 13%;
+    --popover-foreground: 240 13% 90%;
 
-    --primary: 263 70% 65%;
-    /* Slightly brighter in dark mode */
-    --primary-foreground: 0 0% 100%;
+    --primary: 258 100% 87%;
+    --primary-foreground: 263 100% 18%;
 
-    --secondary: 217 33% 14%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 243 100% 88%;
+    --secondary-foreground: 249 100% 21%;
 
-    --muted: 217 33% 14%;
-    --muted-foreground: 215 20% 60%;
+    --muted: 220 5% 22%;
+    --muted-foreground: 264 20% 80%;
 
-    --accent: 280 65% 65%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 155 69% 59%;
+    --accent-foreground: 154 100% 6%;
 
-    --destructive: 0 62.8% 50%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 86% 97%;
 
-    --border: 217 33% 18%;
-    --input: 217 33% 14%;
-    --ring: 263 70% 65%;
+    --border: 259 10% 30%;
+    --input: 259 10% 30%;
+    --ring: 258 100% 87%;
 
-    --chart-1: 263 70% 65%;
-    --chart-2: 173 58% 55%;
-    --chart-3: 43 74% 70%;
-    --chart-4: 340 75% 65%;
-    --chart-5: 160 60% 55%;
+    --chart-1: 258 100% 87%;
+    --chart-2: 155 69% 59%;
+    --chart-3: 43 74% 66%;
+    --chart-4: 340 75% 60%;
+    --chart-5: 243 100% 88%;
   }
 }
 
@@ -110,6 +106,133 @@ body {
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
+}
+
+/* =========================================================
+   AURA BREATHING BACKGROUNDS
+   ========================================================= */
+.aura-bg {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  z-index: -10;
+  opacity: 0.3;
+  pointer-events: none;
+  animation: breathe 10s infinite alternate ease-in-out;
+}
+
+.aura-violet {
+  background: #6d3bd7;
+}
+.aura-blue {
+  background: #3a2dc2;
+}
+.aura-emerald {
+  background: #00a572;
+}
+
+@keyframes breathe {
+  0% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scale(1.2) translate(5%, 5%);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1) translate(-5%, -5%);
+    opacity: 0.2;
+  }
+}
+
+/* =========================================================
+   GLASS PANELS — premium translucent containers
+   ========================================================= */
+.glass-panel {
+  background: linear-gradient(
+    135deg,
+    rgba(208, 188, 255, 0.05) 0%,
+    rgba(51, 53, 57, 0.1) 100%
+  );
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(208, 188, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+.glass-panel-glow {
+  position: relative;
+}
+.glass-panel-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(
+    135deg,
+    rgba(208, 188, 255, 0.5),
+    transparent 40%,
+    transparent 60%,
+    rgba(78, 222, 163, 0.3)
+  );
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.glass-panel-glow:hover::before {
+  opacity: 1;
+}
+
+/* =========================================================
+   GRADIENT TEXT — primary → secondary shimmer
+   ========================================================= */
+.gradient-text {
+  background: linear-gradient(to right, #d0bcff, #c3c0ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* =========================================================
+   SPOTLIGHT CARD OVERRIDES — tuned for new palette
+   ========================================================= */
+.card-spotlight {
+  position: relative;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(208, 188, 255, 0.1);
+  background: linear-gradient(
+    135deg,
+    rgba(208, 188, 255, 0.04) 0%,
+    rgba(51, 53, 57, 0.08) 100%
+  );
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  padding: 2rem;
+  overflow: hidden;
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  --spotlight-color: rgba(208, 188, 255, 0.12);
+}
+
+.card-spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--mouse-x) var(--mouse-y),
+    var(--spotlight-color),
+    transparent 80%
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.card-spotlight:hover::before,
+.card-spotlight:focus-within::before {
+  opacity: 0.6;
 }

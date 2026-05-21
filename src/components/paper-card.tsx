@@ -118,8 +118,8 @@ export function PaperCard({ paper, isSelected, onSelectionChange }: PaperCardPro
 
   return (
     <Card className={cn(
-      "bg-card text-card-foreground transition-all duration-300 group",
-      isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : "shadow-sm hover:shadow-lg border"
+      "glass-panel text-card-foreground transition-all duration-300 group rounded-2xl",
+      isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : "hover:shadow-lg hover:shadow-primary/5"
     )}>
 
       <CardHeader>

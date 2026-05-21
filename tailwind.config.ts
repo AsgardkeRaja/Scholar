@@ -17,8 +17,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['Space Grotesk', 'sans-serif'],
+        body: ['var(--font-body)', 'Hanken Grotesk', 'sans-serif'],
+        headline: ['var(--font-headline)', 'Source Serif 4', 'serif'],
         code: ['monospace'],
       },
       colors: {
@@ -77,6 +77,13 @@ export default {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        '2xl': '1rem',
+        '3xl': '1.5rem',
+      },
+      spacing: {
+        'glass-padding': '1.5rem',
+        'section-gap': '7.5rem',
+        'gutter': '2rem',
       },
       keyframes: {
         'accordion-down': {

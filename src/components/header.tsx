@@ -19,26 +19,31 @@ export function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-lg">
-      <div className="container flex h-16 items-center justify-between">
+    <header className="sticky top-4 z-50 mx-auto w-[95%] max-w-7xl">
+      <div className="flex h-14 items-center justify-between rounded-full border border-white/10 bg-black/20 px-6 backdrop-blur-2xl transition-all duration-300 hover:bg-black/35 hover:border-white/15">
         <div className="flex items-center gap-6">
           <div className="mr-2 flex items-center">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="font-bold text-lg font-headline">Scholar Summarizer</span>
+            <Link href="/" className="flex items-center gap-2 group">
+              <span className="font-bold text-lg font-headline gradient-text transition-opacity group-hover:opacity-80">
+                The research
+              </span>
             </Link>
           </div>
-          <nav className="flex items-center space-x-6 text-sm font-medium">
+          <nav className="flex items-center space-x-5 text-sm font-medium">
             {navLinks.map((link) => {
               // Hide auth-required links if not authenticated
               if (link.authRequired && !user) return null;
 
+              const isActive = pathname === link.href;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    'transition-colors hover:text-primary flex items-center gap-1.5',
-                    pathname === link.href ? 'text-primary font-semibold' : 'text-muted-foreground'
+                    'relative flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-200',
+                    isActive
+                      ? 'text-primary-foreground bg-primary/90 font-semibold shadow-md shadow-primary/20'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
                   )}
                 >
                   {link.icon}
@@ -51,18 +56,18 @@ export function Header() {
 
         <div className="flex items-center gap-3">
           {loading ? (
-            <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
+            <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
           ) : user ? (
             <UserDropdown />
           ) : (
             <>
-              <Button asChild variant="ghost" size="sm">
+              <Button asChild variant="ghost" size="sm" className="rounded-full text-muted-foreground hover:text-foreground hover:bg-white/5">
                 <Link href="/login">
                   <LogIn className="w-4 h-4 mr-2" />
                   Sign In
                 </Link>
               </Button>
-              <Button asChild size="sm">
+              <Button asChild size="sm" className="rounded-full bg-primary/90 text-primary-foreground hover:bg-primary shadow-md shadow-primary/20">
                 <Link href="/signup">Sign Up</Link>
               </Button>
             </>
