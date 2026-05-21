@@ -93,7 +93,7 @@ export default function UploadPage() {
 
                 // Store papers and columns in localStorage
                 localStorage.setItem('review_papers', JSON.stringify(papers));
-                localStorage.setItem('review_columns', JSON.stringify(ALL_COLUMNS));
+                localStorage.setItem('review_columns', JSON.stringify(['Abstract Summary', 'Results']));
 
                 toast({
                     title: 'Papers Processed',
