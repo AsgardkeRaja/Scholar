@@ -310,4 +310,3 @@ async function extractTextFromPDF(file: File): Promise<string> {
         throw error;
     }
 }
-

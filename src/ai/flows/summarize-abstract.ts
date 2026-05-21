@@ -31,10 +31,8 @@ export type SummarizeAbstractOutput = z.infer<typeof SummarizeAbstractOutputSche
 
 export async function summarizeAbstract(input: SummarizeAbstractInput): Promise<SummarizeAbstractOutput> {
   if (input.model === 'groq') {
-    // Use Groq SDK directly for Llama 3.3 70B
-    return withRetry(async () => {
-      return groqSummarize(input.abstract);
-    }, 3, 2000);
+    // Use Groq SDK directly — rate limiting, chunking, and retry are handled internally
+    return groqSummarize(input.abstract);
   }
   // Default: use Gemini via Genkit
   return summarizeAbstractFlow({ abstract: input.abstract, model: 'gemini' });

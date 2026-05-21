@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect, useTransition, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { type Paper } from '@/types';
 import { extractPaperAttributesAction } from '@/app/actions';
@@ -76,47 +76,61 @@ export default function ReviewPage() {
         }
     }, [router, toast]);
 
+    const fetchingAttributesRef = useRef<Set<string>>(new Set());
+
+    useEffect(() => {
+        // Clear fetching state if model or papers change
+        fetchingAttributesRef.current.clear();
+    }, [selectedModel, papers]);
+
     useEffect(() => {
         if (papers.length === 0) return;
 
         const attributesToFetch = selectedColumns.filter(col => {
-            // Check if we already have data for this column for at least one paper
-            // Ideally we check if we have it for ALL papers, but for simplicity, 
-            // we'll fetch if we are missing data for the first paper or if the column is new.
-            // A better check: is this column present in the extractedData for paper 0?
-            return !extractedData[0]?.[col];
+            // Only fetch if we are missing this data AND we are not already currently fetching it
+            return !extractedData[0]?.[col] && !fetchingAttributesRef.current.has(col);
         });
 
         if (attributesToFetch.length === 0) return;
 
+        // Mark these attributes as currently fetching to prevent concurrent requests
+        attributesToFetch.forEach(col => fetchingAttributesRef.current.add(col));
+
         startTransition(async () => {
-            const input = {
-                papers: papers.map(p => ({ title: p.title, abstract: p.fullText || p.abstract || '' })),
-                attributes: attributesToFetch,
-                model: selectedModel,
-            };
+            try {
+                const input = {
+                    papers: papers.map(p => ({ title: p.title, abstract: p.fullText || p.abstract || '' })),
+                    attributes: attributesToFetch,
+                    model: selectedModel,
+                };
 
-            const result = await extractPaperAttributesAction(input);
+                const result = await extractPaperAttributesAction(input);
 
-            if (result.error) {
-                toast({ variant: 'destructive', title: 'Extraction Failed', description: result.error });
-                return;
-            }
+                if (result.error) {
+                    toast({ variant: 'destructive', title: 'Extraction Failed', description: result.error });
+                    return;
+                }
 
-            if (result.data) {
-                setExtractedData(prev => {
-                    const newData = { ...prev };
-                    result.data?.forEach((item: any) => {
-                        const paperIndex = item.paperIndex;
-                        if (!newData[paperIndex]) newData[paperIndex] = {};
-                        // Merge new attributes
-                        newData[paperIndex] = { ...newData[paperIndex], ...item.attributes };
+                if (result.data) {
+                    setExtractedData(prev => {
+                        const newData = { ...prev };
+                        result.data?.forEach((item: any) => {
+                            const paperIndex = item.paperIndex;
+                            if (!newData[paperIndex]) newData[paperIndex] = {};
+                            // Merge new attributes
+                            newData[paperIndex] = { ...newData[paperIndex], ...item.attributes };
+                        });
+                        return newData;
                     });
-                    return newData;
-                });
+                }
+            } catch (e) {
+                console.error('[Review] Failed to extract attributes:', e);
+            } finally {
+                // Clear the fetching state for these attributes once complete
+                attributesToFetch.forEach(col => fetchingAttributesRef.current.delete(col));
             }
         });
-    }, [selectedColumns, papers, selectedModel]);
+    }, [selectedColumns, papers, selectedModel, extractedData]);
 
     const handleExportCSV = () => {
         // Simple CSV export

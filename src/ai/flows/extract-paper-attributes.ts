@@ -70,10 +70,8 @@ const prompt = ai.definePrompt({
 
 export async function extractPaperAttributes(input: ExtractAttributesInput): Promise<ExtractAttributesOutput> {
     if (input.model === 'groq') {
-        // Use Groq SDK directly for Llama 3.3 70B
-        return withRetry(async () => {
-            return groqExtractAttributes(input.papers, input.attributes);
-        }, 3, 2000);
+        // Use Groq SDK directly — rate limiting, chunking, and retry are handled internally
+        return groqExtractAttributes(input.papers, input.attributes);
     }
     // Default: use Gemini via Genkit
     return extractPaperAttributesFlow(input);
